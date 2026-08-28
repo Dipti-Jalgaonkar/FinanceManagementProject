@@ -1,10 +1,47 @@
 // src/pages/Signup.tsx
 // UI-only version: no state, no hooks, no handlers, no conditional rendering.
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, FormEvent } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/layout/Header";
+import { useAuth } from "@/hooks/useAuth";
 
 const Signup: React.FC = () => {
+    const { register, login, isLoggedIn, loading } = useAuth();
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const redirect = searchParams.get("redirect") || "/";
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const [submitting, setSubmitting] = useState(false);
+    const [err, setErr] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!loading && isLoggedIn) {
+            navigate(redirect, { replace: true });
+        }
+    }, [loading, isLoggedIn, navigate, redirect]);
+
+    const onSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        setErr(null);
+        if (!email || !password) {
+            setErr("Email and password are required");
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+            await register({ email, password });
+            navigate(redirect, { replace: true });
+        } catch (error) {
+            setErr("Could not create account");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     return (
         <>
             <Header />
@@ -25,48 +62,89 @@ const Signup: React.FC = () => {
                                 <span className="block h-2 w-2 rounded-full bg-gray-900 dark:bg-white/85" />
                             </div>
                         </div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">Join and get moving fast.</p>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Create your account
+                        </h1>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">
+                            Join and get moving fast.
+                        </p>
                     </div>
 
                     {/* Card */}
                     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-white/5 dark:backdrop-blur-md">
                         {/* Optional error slot (UI only): add/remove 'hidden' to show/hide */}
-                        <div className="hidden mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">Could not create account. Try a different email/username.</div>
+                        {err && (
+                            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+                                {err}
+                            </div>
+                        )}
 
-                        <form noValidate className="space-y-4">
+                        <form onSubmit={onSubmit} className="space-y-4">
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-neutral-300">Email</label>
-                                <input type="email" autoComplete="email" placeholder="you@example.com" className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 outline-none ring-0 transition focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-200 dark:border-white/10 dark:bg-black/40 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-white/20 dark:focus:bg-black/30 dark:focus-visible:ring-white/10" />
+                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-neutral-300">
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    autoComplete="email"
+                                    placeholder="you@example.com"
+                                    className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 outline-none ring-0 transition focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-200 dark:border-white/10 dark:bg-black/40 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-white/20 dark:focus:bg-black/30 dark:focus-visible:ring-white/10"
+                                />
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-neutral-300">Username (optional)</label>
-                                <input type="text" placeholder="yourhandle" className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 outline-none ring-0 transition focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-200 dark:border-white/10 dark:bg-black/40 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-white/20 dark:focus:bg-black/30 dark:focus-visible:ring-white/10" />
+                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-neutral-300">
+                                    Username (optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="yourhandle"
+                                    className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 outline-none ring-0 transition focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-200 dark:border-white/10 dark:bg-black/40 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-white/20 dark:focus:bg-black/30 dark:focus-visible:ring-white/10"
+                                />
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-neutral-300">Password</label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-neutral-300">
+                                    Password
+                                </label>
                                 <div className="relative">
-                                    <input type="password" autoComplete="new-password" placeholder="••••••••" className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 pr-10 text-gray-900 placeholder:text-gray-400 outline-none ring-0 transition focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-200 dark:border-white/10 dark:bg-black/40 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-white/20 dark:focus:bg-black/30 dark:focus-visible:ring-white/10" />
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => e.target.value}
+                                        autoComplete="new-password"
+                                        placeholder="••••••••"
+                                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 pr-10 text-gray-900 placeholder:text-gray-400 outline-none ring-0 transition focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-200 dark:border-white/10 dark:bg-black/40 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-white/20 dark:focus:bg-black/30 dark:focus-visible:ring-white/10"
+                                    />
                                 </div>
                             </div>
 
-                            <button type="button" className="group relative w-full overflow-hidden rounded-xl bg-gray-900 px-4 py-2.5 text-white transition hover:opacity-95 dark:bg-white dark:text-black">
+                            <button
+                                type="button"
+                                disabled={submitting}
+                                className="group relative w-full overflow-hidden rounded-xl bg-gray-900 px-4 py-2.5 text-white transition hover:opacity-95 dark:bg-white dark:text-black"
+                            >
                                 <span className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-white via-neutral-200 to-white opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100 dark:block" />
-                                Create account
+                                {submitting ? "Creating..." : "Create account"}
                             </button>
                         </form>
 
                         <p className="mt-6 text-center text-sm text-gray-500 dark:text-neutral-400">
                             Already have an account?{" "}
-                            <Link to="/login" className="font-medium text-blue-600 underline underline-offset-4 hover:underline dark:text-white/90 dark:hover:text-white">
+                            <Link
+                                to="/login"
+                                className="font-medium text-blue-600 underline underline-offset-4 hover:underline dark:text-white/90 dark:hover:text-white"
+                            >
                                 Sign in
                             </Link>
                         </p>
                     </div>
 
-                    <p className="mt-6 text-center text-xs text-gray-400 dark:text-neutral-500">One account. Session refresh via secure cookies.</p>
+                    <p className="mt-6 text-center text-xs text-gray-400 dark:text-neutral-500">
+                        One account. Session refresh via secure cookies.
+                    </p>
                 </div>
             </main>
         </>

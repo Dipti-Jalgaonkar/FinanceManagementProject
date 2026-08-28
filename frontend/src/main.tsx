@@ -4,12 +4,12 @@ import "./index.css";
 import App from "./App";
 
 // If you're working with authenication, don't forget to do this
-// import { AuthProvider } from "@/context/AuthContext"; // 👈 import provider
+import { AuthProvider } from "@/context/AuthContext"; // 👈 import provider
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
-        {/* <AuthProvider> */}
-        <App />
-        {/* </AuthProvider> */}
-    </StrictMode>
+        <AuthProvider>
+            <App />
+        </AuthProvider>
+    </StrictMode>,
 );
