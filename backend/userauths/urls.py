@@ -8,8 +8,10 @@ urlpatterns = [
     path('auth/login/', views.LoginView.as_view(), name='login'),
     path('auth/logout/', views.LogoutView.as_view(), name="logout"),
     path('auth/profile/', views.UserView.as_view(), name='user'),  #endpoint to get user details
+    path('kyc/profile/', views.KYCView.as_view()),  
+    path('kyc/', views.KYCCreateView.as_view()),  
 
     
-    path('auth/token/refresh', views.CookieTokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/token/refresh/', views.CookieTokenRefreshView.as_view(), name='token_refresh'),
 
 ]

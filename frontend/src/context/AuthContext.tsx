@@ -66,14 +66,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }, []);
 
     const fetchCurrentUser = async () => {
-        const res = await apiClient.get<User>("user/profile/");
+        const res = await apiClient.get<User>("user/auth/profile/");
         setUser(res.data);
     };
 
     const register = async (payload: AuthPayload) => {
         try {
             const { data } = await apiClient.post<{ access: string }>(
-                "user/auth/register",
+                "user/auth/register/",
                 payload,
             );
             setAccessToken(data.access);

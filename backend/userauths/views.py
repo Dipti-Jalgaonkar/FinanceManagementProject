@@ -161,4 +161,33 @@ class CookieTokenRefreshView(SimpleJWTTokenRefreshView):
         return response
 
 
+class KYCView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        kyc = userauths_models.KYC.objects.get(user= request.user)
+        serializer = userauths_serializers.KYCSerializer(kyc)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class KYCCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = userauths_serializers.KYCCreateSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            kyc = serializer.save()
+
+            return Response({
+                "message": "KYC Created successfully",
+                "kyc": {
+                    "full_name": kyc.full_name,
+                    "date_of_birth": kyc.date_of_birth,
+                    "id_type": kyc.id_type,
+                    "id_image": kyc.id_image,
+                    "verification_status": kyc.verification_status,  # starts as UNVERIFIED
+                    "created_at": kyc.created_at,
+                    "updated_at": kyc.updated_at,
+                }
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

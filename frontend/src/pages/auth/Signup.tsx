@@ -113,7 +113,9 @@ const Signup: React.FC = () => {
                                     <input
                                         type="password"
                                         value={password}
-                                        onChange={(e) => e.target.value}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)
+                                        }
                                         autoComplete="new-password"
                                         placeholder="••••••••"
                                         className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 pr-10 text-gray-900 placeholder:text-gray-400 outline-none ring-0 transition focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-200 dark:border-white/10 dark:bg-black/40 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-white/20 dark:focus:bg-black/30 dark:focus-visible:ring-white/10"
@@ -122,7 +124,7 @@ const Signup: React.FC = () => {
                             </div>
 
                             <button
-                                type="button"
+                                type="submit"
                                 disabled={submitting}
                                 className="group relative w-full overflow-hidden rounded-xl bg-gray-900 px-4 py-2.5 text-white transition hover:opacity-95 dark:bg-white dark:text-black"
                             >
