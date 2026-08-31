@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 
     # Local Apps
     'userauths',
+    'core',
 ]
 
 MIDDLEWARE = [
