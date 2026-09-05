@@ -59,3 +59,77 @@ class FileUploadView(APIView):
             return Response(file_url, status= status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+
+class VerificationAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        payment_id = request.data.get("paymentId")
+        amount = request.data.get("amount")
+        user = request.user
+
+        if not all([payment_id, amount]):
+            return Response (
+                {"error": "Missing required payment data"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            intent = stripe.PaymentIntent.create(
+                amount = int(amount * 100),
+                currency="usd",
+                payment_method=payment_id,
+                confirm=True,
+                automatic_payment_methods={"enabled": True, "allow_redirects": "never"},
+                description=f"Wallet funding for {user.username}"
+            )
+
+            if intent.status != "succeeded":
+                return Response(
+                    {"error": "Stripe payment not successful"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            transaction_id = intent.id
+        except stripe.error.CardError as e:
+            return Response(
+                {"error": f"Stripe card error: {e.user_message}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Stripe verification error: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        wallet, created = core_models.Wallet.objects.get_or_create(user=user)
+        wallet.balance += amount
+        wallet.save()
+
+        transaction = core_models.Transaction.objects.create(
+            wallet=wallet,
+            transaction_type=core_models.Transaction.TransactionType.DEPOSIT, # deposit type
+            amount=amount,
+            status=core_models.Transaction.TransactionStatus.SUCCESSFUL,     # mark successful
+            receiver=user,                                                   # who got the money
+            external_reference=transaction_id,                               # Stripe payment reference
+        )
+
+        # Create a notification record so user sees "Deposit Successful"
+        core_models.Notification.objects.create(
+            user=user,
+            transaction=transaction,
+            status=core_models.Notification.TransactionType.DEPOSIT,
+            title="New Deposit From Stripe",
+            message=f"You funded your wallet with {amount} from stripe",
+        )
+
+        # Final response: tell frontend deposit worked, send new balance
+        return Response(
+            {
+                "message": "Wallet funding successfull",
+                "wallet_balance": wallet.balance
+            },
+            status=status.HTTP_200_OK
+        )
